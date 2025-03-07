@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinDutch - AI Expense Splitting</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #f0f9ff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --bg: #ffffff;
+            --bg-light: #f8fafc;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .user-menu {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--secondary);
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 85%;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message-user {
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            color: var(--text-light);
+        }
+
+        .outgoing {
+            align-self: flex-end;
+            background-color: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .incoming {
+            align-self: flex-start;
+            background-color: var(--bg);
+            border-bottom-left-radius: 4px;
+        }
+
+        .system-message {
+            align-self: center;
+            background-color: var(--bg-light);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            max-width: 90%;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .expense-card {
+            background-color: var(--bg);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .expense-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .expense-title {
+            font-weight: bold;
+        }
+
+        .expense-amount {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .expense-details {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .expense-participants {
+            display: flex;
+            margin-top: 0.75rem;
+        }
+
+        .member {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary-dark);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: -10px;
+            border: 2px solid var(--bg);
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .member:first-child {
+            margin-left: 0;
+        }
+
+        .summary-card {
+            background-color: var(--bg);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .summary-title {
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            color: var(--primary);
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .owe-positive {
+            color: var(--success);
+        }
+
+        .owe-negative {
+            color: var(--error);
+        }
+
+        .typing-indicator {
+            display: flex;
+            padding: 0.5rem 1rem;
+            background-color: var(--bg);
+            border-radius: 18px;
+            align-self: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--text-light);
+            border-radius: 50%;
+            margin-right: 4px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        .input-area {
+            padding: 0.75rem;
+            background-color: var(--bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.5rem;
+            position: sticky;
+            bottom: 0;
+        }
+
+        .command-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            outline: none;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .command-input:focus {
+            border-color: var(--primary);
+        }
+
+        .command-input::placeholder {
+            color: var(--text-light);
+        }
+
+        .send-button {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .send-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .command-suggestion {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--bg);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 100;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .command-suggestion.visible {
+            display: block;
+        }
+
+        .suggestion-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .suggestion-commands {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .suggestion-command {
+            background-color: var(--secondary);
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .suggestion-command:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .quick-action {
+            display: flex;
+            overflow-x: auto;
+            padding: 0.5rem;
+            gap: 0.5rem;
+            background-color: var(--bg);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .action-button {
+            padding: 0.5rem 0.75rem;
+            background-color: var(--secondary);
+            border-radius: 16px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+
+        .action-button:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .action-button.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .help-overlay, .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .help-content, .login-content {
+            background-color: var(--bg);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .help-title, .login-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        .help-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .help-section-title {
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .command-item {
+            margin-bottom: 1rem;
+        }
+
+        .command-syntax {
+            font-family: monospace;
+            background-color: var(--secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .command-description {
+            margin-top: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .command-example {
+            margin-top: 0.25rem;
+            font-style: italic;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .auth-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .auth-alt {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .auth-link {
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .social-login {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .group-indicator {
+            display: inline-block;
+            background-color: var(--primary-dark);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>FinDutch</h1>
+        <div class="user-menu" id="user-menu">J</div>
+    </header>
+
+    <div class="quick-action">
+        <div class="action-button active">All</div>
+        <div class="action-button">#TokyoTrip</div>
+        <div class="action-button">#RoommateExpenses</div>
+        <div class="action-button">#FamilyDinner</div>
+        <div class="action-button">+ New Group</div>
+    </div>
+
+    <div class="main-content">
+        <div class="chat-messages">
+            <div class="system-message">
+                Welcome to FinDutch! Your AI expense splitting assistant.
+            </div>
+
+            <div class="message incoming">
+                <div class="message-user">FinDutch AI</div>
+                Hi John! How can I help you manage your expenses today?
+            </div>
+
+            <div class="message outgoing">
+                <div class="message-user">You</div>
+                /group create #TokyoTrip
+            </div>
+
+            <div class="message incoming">
+                <div class="message-user">FinDutch AI</div>
+                Group #TokyoTrip has been created successfully. You can add friends to this group by using the /add_friend command.
+            </div>
+
+            <div class="message outgoing">
+                <div class="message-user">You</div>
+                /add_friend @Alice @Bob @Charlie
+            </div>
+
+            <div class="message incoming">
+                <div class="message-user">FinDutch AI</div>
+                Friends added to your contacts. Would you like to add them to a group?
+            </div>
+
+            <div class="message outgoing">
+                <div class="message-user">You</div>
+                Yes, add them to #TokyoTrip
+            </div>
+
+            <div class="message incoming">
+                <div class="message-user">FinDutch AI</div>
+                @Alice, @Bob, and @Charlie have been added to #TokyoTrip successfully.
+            </div>
+
+            <div class="system-message">
+                <div class="group-indicator">#TokyoTrip</div> Alice joined the conversation
+            </div>
+
+            <div class="message incoming">
+                <div class="message-user">Alice</div>
+                Hi everyone! Let's use FinDutch to track our Tokyo trip expenses.
+            </div>
+
+            <div class="system-message">
+                <div class="group-indicator">#TokyoTrip</div> Bob joined the conversation
+            </div>
+
+            <div class="message incoming">
+                <div class="message-user">Bob</div>
+                I'll record our dinner expense from last night.
+            </div>
+
+            <div class="message incoming">
+                <div class="message-user">Bob</div>
+                /record 15000 JPY for sushi dinner with @Alice @John @Charlie in #TokyoTrip
+            </div>
+
+            <div class="message incoming">
+                <div class="message-user">FinDutch AI</div>
+                <div class="group-indicator">#TokyoTrip</div> Expense recorded:
+                <div class="expense-card">
+                    <div class="expense-header">
+                        <div class="expense-title">Sushi dinner</div>
+                        <div class="expense-amount">15,000 JPY</div>
+                    </div>
+                    <div class="expense-details">
+                        Paid by: Bob<br>
+                        Split equally among: Bob, Alice, John, Charlie<br>
+                        Each person owes Bob: 3,750 JPY
+                    </div>
+                    <div class="expense-participants">
+                        <div class="member" style="background-color: #10b981;">B</div>
+                        <div class="member" style="background-color: #ef4444;">A</div>
+                        <div class="member" style="background-color: #ef4444;">J</div>
+                        <div class="member" style="background-color: #ef4444;">C</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="message outgoing">
+                <div class="message-user">You</div>
+                /record I paid 2000 JPY for train tickets with @Alice in #TokyoTrip
+            </div>
+
+            <div class="message incoming">
+                <div class="message-user">FinDutch AI</div>
+                <div class="group-indicator">#TokyoTrip</div> Expense recorded:
+                <div class="expense-card">
+                    <div class="expense-header">
+                        <div class="expense-title">Train tickets</div>
+                        <div class="expense-amount">2,000 JPY</div>
+                    </div>
+                    <div class="expense-details">
+                        Paid by: John<br>
+                        Split equally between: John, Alice<br>
+                        Alice owes John: 1,000 JPY
+                    </div>
+                    <div class="expense-participants">
+                        <div class="member" style="background-color: #10b981;">J</div>
+                        <div class="member" style="background-color: #ef4444;">A</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="message incoming">
+                <div class="message-user">Alice</div>
+                /record 7500 JPY for museum tickets with everyone in #TokyoTrip
+            </div>
+
+            <div class="message incoming">
+                <div class="message-user">FinDutch AI</div>
+                <div class="group-indicator">#TokyoTrip</div> Expense recorded:
+                <div class="expense-card">
+                    <div class="expense-header">
+                        <div class="expense-title">Museum tickets</div>
+                        <div class="expense-amount">7,500 JPY</div>
+                    </div>
+                    <div class="expense-details">
+                        Paid by: Alice<br>
+                        Split equally among: Alice, Bob, John, Charlie<br>
+                        Each person owes Alice: 1,875 JPY
+                    </div>
+                    <div class="expense-participants">
+                        <div class="member" style="background-color: #10b981;">A</div>
+                        <div class="member" style="background-color: #ef4444;">B</div>
+                        <div class="member" style="background-color: #ef4444;">J</div>
+                        <div class="member" style="background-color: #ef4444;">C</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="message outgoing">
+                <div class="message-user">You</div>
+                /finalize #TokyoTrip
+            </div>
+
+            <div class="message incoming">
+                <div class="message-user">FinDutch AI</div>
+                <div class="group-indicator">#TokyoTrip</div> Here's the final settlement:
+                <div class="summary-card">
+                    <div class="summary-title">Settlement Summary</div>
+                    <div class="summary-item">
+                        <div>You owe Bob:</div>
+                        <div class="owe-negative">3,750 JPY</div>
+                    </div>
+                    <div class="summary-item">
+                        <div>Alice owes you:</div>
+                        <div class="owe-positive">1,000 JPY</div>
+                    </div>
+                    <div class="summary-item">
+                        <div>You owe Alice:</div>
+                        <div class="owe-negative">1,875 JPY</div>
+                    </div>
+                    <div class="summary-item">
+                        <div>Charlie owes Bob:</div>
+                        <div class="owe-negative">3,750 JPY</div>
+                    </div>
+                    <div class="summary-item">
+                        <div>Charlie owes Alice:</div>
+                        <div class="owe-negative">1,875 JPY</div>
+                    </div>
+                    <div class="summary-item">
+                        <div><strong>Your net balance:</strong></div>
+                        <div class="owe-negative"><strong>-4,625 JPY</strong></div>
+                    </div>
+                </div>
+                Would you like to see optimized payment routes to minimize the number of transactions?
+            </div>
+
+            <div class="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        <div class="command-suggestion visible">
+            <div class="suggestion-title">Available commands:</div>
+            <div class="suggestion-commands">
+                <div class="suggestion-command">/record</div>
+                <div class="suggestion-command">/add_friend</div>
+                <div class="suggestion-command">/group</div>
+                <div class="suggestion-command">/finalize</div>
+                <div class="suggestion-command">/help</div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" class="command-input" placeholder="Type a message or command (e.g., /record)">
+            <button class="send-button">→</button>
+        </div>
+    </div>
+
+    <!-- Help Overlay -->
+    <div class="help-overlay" id="help-overlay">
+        <div class="help-content">
+            <button class="close-button" id="close-help">×</button>
+            <div class="help-title">FinDutch Help</div>
+            
+            <div class="help-section">
+                <div class="help-section-title">Commands</div>
+                
+                <div class="command-item">
+                    <div class="command-syntax">/add_friend [@username]</div>
+                    <div class="command-description">Add new friends to your contacts.</div>
+                    <div class="command-example">Example: /add_friend @Alice @Bob</div>
+                </div>
+                
+                <div class="command-item">
+                    <div class="command-syntax">/group [create/delete] [#groupname]</div>
+                    <div class="command-description">Create or delete an expense group.</div>
+                    <div class="command-example">Example: /group create #BaliVacation</div>
+                </div>
+                
+                <div class="command-item">
+                    <div class="command-syntax">/record [amount] [description] [@users] [#group] [currency?]</div>
+                    <div class="command-description">Record a new expense with details.</div>
+                    <div class="command-example">Example: /record 50 USD for dinner with @Bob in #FriendsDinner</div>
+                </div>
+                
+                <div class="command-item">
+                    <div class="command-syntax">/finalize [#group?]</div>
+                    <div class="command-description">Calculate and show the final settlement for a group.</div>
+                    <div class="command-example">Example: /finalize #RoommateExpenses</div>
+                </div>
+            </div>
+            
+            <div class="help-section">
+                <div class="help-section-title">Natural Language</div>
+                <p>FinDutch understands natural language inputs:</p>
+                <ul style="margin-left: 1rem; margin-top: 0.5rem;">
+                    <li>"I paid 30 euros for lunch with Alice and Bob"</li>
+                    <li>"Split 120 dollars for hotel with everyone in #VacationGroup"</li>
+                </ul>
+            </div>
+            
+            <div class="help-section">
+                <div class="help-section-title">Tips</div>
+                <ul style="margin-left: 1rem;">
+                    <li>Use @ to tag friends in expenses</li>
+                    <li>Use # to associate expenses with groups</li>
+                    <li>Currencies are auto-detected</li>
+                    <li>Type "with everyone" to include all group members</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-content">
+            <button class="close-button" id="close-login">×</button>
+            <div class="login-title">Sign In</div>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="your@email.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                </div>
+                
+                <button type="submit" class="auth-button">Sign In</button>
+                
+                <div class="social-login">
+                    <div class="social-button">G</div>
+                    <div class="social-button">f</div>
+                    <div class="social-button">in</div>
+                </div>
+                
+                <div class="auth-alt">
+                    Don't have an account? <a class="auth-link" id="show-signup">Sign Up</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sign Up Overlay -->
+    <div class="login-overlay" id="signup-overlay">
+        <div class="login-content">
+            <button class="close-button" id="close-signup">×</button>
+            <div class="login-title">Create Account</div>
+            
+            <form id="signup-form">
+                <div class="form-group">
+                    <label class="form-label" for="signup-name">Full Name</label>
+                    <input type="text" id="signup-name" class="form-input" placeholder="John Doe" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="signup-email">Email</label>
+                    <input type="email" id="signup-email" class="form-input" placeholder="your@email.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="signup-password">Password</label>
+                    <input type="password" id="signup-password" class="form-input" placeholder="••••••••" required>
+                </div>
+                
+                <button type="submit" class="auth-button">Create Account</button>
+                
+                <div class="social-login">
+                    <div class="social-button">G</div>
+                    <div class="social-button">f</div>
+                    <div class="social-button">in</div>
+                </div>
+                
+                <div class="auth-alt">
+                    Already have an account? <a class="auth-link" id="show-login">Sign In</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Demo interactions
+        document.querySelector('.send-button').addEventListener('click', function() {
+            const input = document.querySelector('.command-input');
+            if (input.value.trim() === '/help') {
+                document.getElementById('help-overlay').style.display = 'flex';
+            }
+            input.value = '';
+        });
+
+        // Command suggestions
+        document.querySelector('.command-input').addEventListener('focus', function() {
+            document.querySelector('.command-suggestion').classList.add('visible');
+        });
+
+        document.querySelector('.command-input').addEventListener('blur', function() {
+            setTimeout(() => {
+                document.querySelector('.command-suggestion').classList.remove('visible');
+            }, 200);
+        });
+
+        // Add command when suggestion clicked
+        document.querySelectorAll('.suggestion-command').forEach(cmd => {
+            cmd.addEventListener('click', function() {
+                const input = document.querySelector('.command-input');
+                input.value = this.textContent + ' ';
+                input.focus();
+            });
+        });
+
+        // Help overlay
+        document.getElementById('close-help').addEventListener('click', function() {
+            document.getElementById('help-overlay').style.display = 'none';
+        });
+
+        // Authentication flows
+        document.getElementById('user-menu').addEventListener('click', function() {
+            document.getElementById('login-overlay').style.display = 'flex';
+        });
