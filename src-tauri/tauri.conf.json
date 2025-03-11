@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "findutch",
-  "version": "0.1.0",
+  "productName": "FinDutch",
+  "version": "0.0.1",
   "identifier": "com.findutch.app",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -12,9 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "findutch",
-        "width": 800,
-        "height": 600
+        "title": "FinDutch",
+        "width": 430,
+        "height": 932,
+        "resizable": false,
+        "fullscreen": false,
+        "center": true
       }
     ],
     "security": {
