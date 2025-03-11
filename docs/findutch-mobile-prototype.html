@@ -1,22 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinDutch - AI Expense Splitting</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #f0f9ff;
-            --text: #1e293b;
-            --text-light: #64748b;
-            --bg: #ffffff;
-            --bg-light: #f8fafc;
-            --border: #e2e8f0;
+            --primary: #A5C9CA;
+            --primary-dark: #2C3639;
+            --secondary: #3F4E4F;
+            --accent: #A27B5C;
+            --text: #DCD7C9;
+            --text-light: #DCD7C9;
+            --bg: #2C3639;
+            --bg-light: #3F4E4F;
+            --border: #A27B5C;
             --success: #10b981;
             --error: #ef4444;
             --warning: #f59e0b;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.2), 0 5px 8px rgba(0, 0, 0, 0.15);
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.3s ease;
+            --gradient-primary: linear-gradient(135deg, #A5C9CA, #83a1a3);
+            --gradient-accent: linear-gradient(135deg, #A27B5C, #8a6849);
+            --gradient-dark: linear-gradient(135deg, #2C3639, #232c2e);
         }
 
         * {
@@ -36,37 +47,47 @@
             width: 100%;
             max-width: 500px;
             margin: 0 auto;
+            transition: background-color var(--transition-normal);
         }
 
         header {
-            background-color: var(--primary);
-            color: white;
+            background: var(--gradient-primary);
+            color: var(--bg);
             padding: 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-md);
             position: sticky;
             top: 0;
             z-index: 10;
+            backdrop-filter: blur(10px);
         }
 
         header h1 {
             font-size: 1.5rem;
             margin: 0;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.5px;
         }
 
         .user-menu {
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background-color: var(--primary-dark);
+            background: var(--gradient-dark);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: var(--text);
             font-weight: bold;
             cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: transform var(--transition-fast);
+        }
+
+        .user-menu:hover {
+            transform: scale(1.05);
         }
 
         .main-content {
@@ -75,6 +96,7 @@
             flex-direction: column;
             background-color: var(--secondary);
             overflow: hidden;
+            position: relative;
         }
 
         .chat-messages {
@@ -83,6 +105,7 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
+            scroll-behavior: smooth;
         }
 
         .message {
@@ -92,6 +115,21 @@
             border-radius: 18px;
             position: relative;
             word-wrap: break-word;
+            box-shadow: var(--shadow-sm);
+            transform-origin: left bottom;
+            animation: messageAppear 0.3s ease-out forwards;
+        }
+
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .message-user {
@@ -99,13 +137,15 @@
             font-weight: bold;
             margin-bottom: 0.25rem;
             color: var(--text-light);
+            opacity: 0.9;
         }
 
         .outgoing {
             align-self: flex-end;
-            background-color: var(--primary);
-            color: white;
+            background: var(--gradient-primary);
+            color: var(--primary-dark);
             border-bottom-right-radius: 4px;
+            transform-origin: right bottom;
         }
 
         .incoming {
@@ -116,7 +156,7 @@
 
         .system-message {
             align-self: center;
-            background-color: var(--bg-light);
+            background-color: rgba(44, 54, 57, 0.6);
             border-radius: 8px;
             padding: 0.5rem 1rem;
             font-size: 0.85rem;
@@ -124,6 +164,19 @@
             max-width: 90%;
             text-align: center;
             margin-bottom: 1rem;
+            backdrop-filter: blur(4px);
+            box-shadow: var(--shadow-sm);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .expense-card {
@@ -131,7 +184,12 @@
             border-radius: 12px;
             padding: 1rem;
             margin-top: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow-md);
+            transition: transform var(--transition-fast);
+        }
+
+        .expense-card:hover {
+            transform: translateY(-2px);
         }
 
         .expense-header {
@@ -152,6 +210,7 @@
         .expense-details {
             font-size: 0.9rem;
             color: var(--text-light);
+            line-height: 1.5;
         }
 
         .expense-participants {
@@ -172,44 +231,17 @@
             border: 2px solid var(--bg);
             font-size: 0.75rem;
             font-weight: bold;
+            box-shadow: var(--shadow-sm);
+            transition: transform var(--transition-fast);
+        }
+
+        .member:hover {
+            transform: translateY(-3px) scale(1.1);
+            z-index: 1;
         }
 
         .member:first-child {
             margin-left: 0;
-        }
-
-        .summary-card {
-            background-color: var(--bg);
-            border-radius: 12px;
-            padding: 1rem;
-            margin-top: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .summary-title {
-            font-weight: bold;
-            margin-bottom: 0.75rem;
-            color: var(--primary);
-        }
-
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .summary-item:last-child {
-            border-bottom: none;
-        }
-
-        .owe-positive {
-            color: var(--success);
-        }
-
-        .owe-negative {
-            color: var(--error);
         }
 
         .typing-indicator {
@@ -219,6 +251,7 @@
             border-radius: 18px;
             align-self: flex-start;
             margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
         }
 
         .typing-dot {
@@ -230,74 +263,113 @@
             animation: typing 1.4s infinite ease-in-out;
         }
 
-        .typing-dot:nth-child(1) { animation-delay: 0s; }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        .typing-dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
 
         @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-6px); }
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-6px);
+            }
         }
 
         .input-area {
-            padding: 0.75rem;
+            padding: 0.85rem;
             background-color: var(--bg);
-            border-top: 1px solid var(--border);
+            border-top: 1px solid rgba(162, 123, 92, 0.3);
             display: flex;
             gap: 0.5rem;
             position: sticky;
             bottom: 0;
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(10px);
         }
 
         .command-input {
             flex: 1;
             padding: 0.75rem 1rem;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(162, 123, 92, 0.3);
             border-radius: 24px;
             outline: none;
             font-size: 1rem;
-            transition: border-color 0.2s;
+            background-color: rgba(63, 78, 79, 0.2);
+            color: var(--text);
+            transition: all var(--transition-fast);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .command-input:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(165, 201, 202, 0.2);
         }
 
         .command-input::placeholder {
-            color: var(--text-light);
+            color: rgba(220, 215, 201, 0.6);
         }
 
         .send-button {
             width: 42px;
             height: 42px;
             border-radius: 50%;
-            background-color: var(--primary);
-            color: white;
+            background: var(--gradient-primary);
+            color: var(--primary-dark);
             display: flex;
             align-items: center;
             justify-content: center;
             border: none;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all var(--transition-fast);
+            box-shadow: var(--shadow-sm);
         }
 
         .send-button:hover {
-            background-color: var(--primary-dark);
+            transform: scale(1.05) rotate(5deg);
+            box-shadow: var(--shadow-md);
         }
 
         .command-suggestion {
             position: fixed;
-            bottom: 70px;
+            bottom: 80px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: var(--bg);
+            background-color: rgba(44, 54, 57, 0.95);
             border-radius: 12px;
             padding: 0.75rem 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-lg);
             display: none;
             z-index: 100;
             width: 90%;
             max-width: 400px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(165, 201, 202, 0.2);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translate(-50%, 10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
         }
 
         .command-suggestion.visible {
@@ -307,6 +379,7 @@
         .suggestion-title {
             font-weight: bold;
             margin-bottom: 0.5rem;
+            color: var(--primary);
         }
 
         .suggestion-commands {
@@ -316,78 +389,129 @@
         }
 
         .suggestion-command {
-            background-color: var(--secondary);
-            border-radius: 4px;
-            padding: 0.25rem 0.5rem;
+            background-color: rgba(63, 78, 79, 0.6);
+            border-radius: 8px;
+            padding: 0.35rem 0.75rem;
             font-size: 0.9rem;
             cursor: pointer;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
         }
 
         .suggestion-command:hover {
             background-color: var(--primary);
-            color: white;
+            color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
         }
 
         .quick-action {
             display: flex;
             overflow-x: auto;
-            padding: 0.5rem;
+            padding: 0.75rem 0.5rem;
             gap: 0.5rem;
             background-color: var(--bg);
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(162, 123, 92, 0.3);
             white-space: nowrap;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            /* For Firefox */
+        }
+
+        .quick-action::-webkit-scrollbar {
+            display: none;
+            /* For Chrome, Safari, and Opera */
         }
 
         .action-button {
             padding: 0.5rem 0.75rem;
-            background-color: var(--secondary);
+            background-color: rgba(63, 78, 79, 0.6);
             border-radius: 16px;
             font-size: 0.85rem;
             cursor: pointer;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(162, 123, 92, 0.3);
+            transition: all var(--transition-fast);
         }
 
         .action-button:hover {
-            background-color: var(--primary);
+            background-color: var(--accent);
             color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
         }
 
         .action-button.active {
-            background-color: var(--primary);
+            background: var(--gradient-accent);
             color: white;
+            box-shadow: var(--shadow-sm);
         }
 
-        .help-overlay, .login-overlay {
+        .help-overlay,
+        .login-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
             display: none;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
         }
 
-        .help-content, .login-content {
+        .help-content,
+        .login-content {
             background-color: var(--bg);
-            border-radius: 12px;
+            border-radius: 18px;
             padding: 2rem;
             width: 90%;
             max-width: 400px;
             max-height: 80vh;
             overflow-y: auto;
             position: relative;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(165, 201, 202, 0.2);
+            animation: modalAppear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .help-title, .login-title {
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .help-title,
+        .login-title {
             font-size: 1.5rem;
             font-weight: bold;
             margin-bottom: 1.5rem;
-            color: var(--primary);
+            color: var(--accent);
             text-align: center;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .help-title:after,
+        .login-title:after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 3px;
+            background: var(--accent);
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 3px;
         }
 
         .help-section {
@@ -397,19 +521,27 @@
         .help-section-title {
             font-weight: bold;
             margin-bottom: 0.75rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(162, 123, 92, 0.3);
             padding-bottom: 0.5rem;
+            color: var(--primary);
         }
 
         .command-item {
             margin-bottom: 1rem;
+            transition: transform var(--transition-fast);
+        }
+
+        .command-item:hover {
+            transform: translateX(5px);
         }
 
         .command-syntax {
             font-family: monospace;
-            background-color: var(--secondary);
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
+            background-color: rgba(63, 78, 79, 0.6);
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 0.25rem;
         }
 
         .command-description {
@@ -420,19 +552,35 @@
         .command-example {
             margin-top: 0.25rem;
             font-style: italic;
-            color: var(--text-light);
+            color: rgba(220, 215, 201, 0.7);
             font-size: 0.85rem;
+            padding-left: 0.5rem;
+            border-left: 2px solid var(--accent);
         }
 
         .close-button {
             position: absolute;
-            top: 1rem;
-            right: 1rem;
+            top: 0.75rem;
+            right: 0.75rem;
             background: none;
             border: none;
             font-size: 1.5rem;
             cursor: pointer;
             color: var(--text-light);
+            opacity: 0.7;
+            transition: all var(--transition-fast);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close-button:hover {
+            opacity: 1;
+            background-color: rgba(220, 215, 201, 0.1);
+            transform: rotate(90deg);
         }
 
         .form-group {
@@ -443,48 +591,76 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--primary);
         }
 
         .form-input {
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            padding: 0.85rem;
+            border: 1px solid rgba(162, 123, 92, 0.3);
+            border-radius: 12px;
             font-size: 1rem;
+            background-color: rgba(63, 78, 79, 0.2);
+            color: var(--text);
+            transition: all var(--transition-fast);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .form-input:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(165, 201, 202, 0.2);
             outline: none;
         }
 
         .auth-button {
             width: 100%;
-            padding: 0.75rem;
-            background-color: var(--primary);
+            padding: 0.85rem;
+            background: var(--gradient-accent);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
             margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-fast);
         }
 
         .auth-button:hover {
-            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .auth-alt {
             text-align: center;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
             font-size: 0.9rem;
         }
 
         .auth-link {
-            color: var(--primary);
+            color: var(--accent);
             text-decoration: none;
             cursor: pointer;
+            transition: all var(--transition-fast);
+            position: relative;
+            padding-bottom: 2px;
+        }
+
+        .auth-link:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 1px;
+            bottom: 0;
+            left: 0;
+            background-color: var(--accent);
+            transition: width var(--transition-fast);
+        }
+
+        .auth-link:hover:after {
+            width: 100%;
         }
 
         .social-login {
@@ -498,12 +674,21 @@
             width: 48px;
             height: 48px;
             border-radius: 50%;
-            background-color: var(--secondary);
+            background-color: rgba(63, 78, 79, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(162, 123, 92, 0.3);
             cursor: pointer;
+            transition: all var(--transition-fast);
+            color: var(--text);
+            font-size: 1.2rem;
+        }
+
+        .social-button:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            background-color: var(--accent);
         }
 
         .group-indicator {
@@ -511,12 +696,14 @@
             background-color: var(--primary-dark);
             color: white;
             padding: 0.25rem 0.5rem;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 0.8rem;
             margin-right: 0.5rem;
+            box-shadow: var(--shadow-sm);
         }
     </style>
 </head>
+
 <body>
     <header>
         <h1>FinDutch</h1>
@@ -528,7 +715,7 @@
         <div class="action-button">#TokyoTrip</div>
         <div class="action-button">#RoommateExpenses</div>
         <div class="action-button">#FamilyDinner</div>
-        <div class="action-button">+ New Group</div>
+        <div class="action-button"><i class="fas fa-plus"></i> New Group</div>
     </div>
 
     <div class="main-content">
@@ -549,7 +736,8 @@
 
             <div class="message incoming">
                 <div class="message-user">FinDutch AI</div>
-                Group #TokyoTrip has been created successfully. You can add friends to this group by using the /add_friend command.
+                Group #TokyoTrip has been created successfully. You can add friends to this group by using the
+                /add_friend command.
             </div>
 
             <div class="message outgoing">
@@ -595,118 +783,6 @@
                 /record 15000 JPY for sushi dinner with @Alice @John @Charlie in #TokyoTrip
             </div>
 
-            <div class="message incoming">
-                <div class="message-user">FinDutch AI</div>
-                <div class="group-indicator">#TokyoTrip</div> Expense recorded:
-                <div class="expense-card">
-                    <div class="expense-header">
-                        <div class="expense-title">Sushi dinner</div>
-                        <div class="expense-amount">15,000 JPY</div>
-                    </div>
-                    <div class="expense-details">
-                        Paid by: Bob<br>
-                        Split equally among: Bob, Alice, John, Charlie<br>
-                        Each person owes Bob: 3,750 JPY
-                    </div>
-                    <div class="expense-participants">
-                        <div class="member" style="background-color: #10b981;">B</div>
-                        <div class="member" style="background-color: #ef4444;">A</div>
-                        <div class="member" style="background-color: #ef4444;">J</div>
-                        <div class="member" style="background-color: #ef4444;">C</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="message outgoing">
-                <div class="message-user">You</div>
-                /record I paid 2000 JPY for train tickets with @Alice in #TokyoTrip
-            </div>
-
-            <div class="message incoming">
-                <div class="message-user">FinDutch AI</div>
-                <div class="group-indicator">#TokyoTrip</div> Expense recorded:
-                <div class="expense-card">
-                    <div class="expense-header">
-                        <div class="expense-title">Train tickets</div>
-                        <div class="expense-amount">2,000 JPY</div>
-                    </div>
-                    <div class="expense-details">
-                        Paid by: John<br>
-                        Split equally between: John, Alice<br>
-                        Alice owes John: 1,000 JPY
-                    </div>
-                    <div class="expense-participants">
-                        <div class="member" style="background-color: #10b981;">J</div>
-                        <div class="member" style="background-color: #ef4444;">A</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="message incoming">
-                <div class="message-user">Alice</div>
-                /record 7500 JPY for museum tickets with everyone in #TokyoTrip
-            </div>
-
-            <div class="message incoming">
-                <div class="message-user">FinDutch AI</div>
-                <div class="group-indicator">#TokyoTrip</div> Expense recorded:
-                <div class="expense-card">
-                    <div class="expense-header">
-                        <div class="expense-title">Museum tickets</div>
-                        <div class="expense-amount">7,500 JPY</div>
-                    </div>
-                    <div class="expense-details">
-                        Paid by: Alice<br>
-                        Split equally among: Alice, Bob, John, Charlie<br>
-                        Each person owes Alice: 1,875 JPY
-                    </div>
-                    <div class="expense-participants">
-                        <div class="member" style="background-color: #10b981;">A</div>
-                        <div class="member" style="background-color: #ef4444;">B</div>
-                        <div class="member" style="background-color: #ef4444;">J</div>
-                        <div class="member" style="background-color: #ef4444;">C</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="message outgoing">
-                <div class="message-user">You</div>
-                /finalize #TokyoTrip
-            </div>
-
-            <div class="message incoming">
-                <div class="message-user">FinDutch AI</div>
-                <div class="group-indicator">#TokyoTrip</div> Here's the final settlement:
-                <div class="summary-card">
-                    <div class="summary-title">Settlement Summary</div>
-                    <div class="summary-item">
-                        <div>You owe Bob:</div>
-                        <div class="owe-negative">3,750 JPY</div>
-                    </div>
-                    <div class="summary-item">
-                        <div>Alice owes you:</div>
-                        <div class="owe-positive">1,000 JPY</div>
-                    </div>
-                    <div class="summary-item">
-                        <div>You owe Alice:</div>
-                        <div class="owe-negative">1,875 JPY</div>
-                    </div>
-                    <div class="summary-item">
-                        <div>Charlie owes Bob:</div>
-                        <div class="owe-negative">3,750 JPY</div>
-                    </div>
-                    <div class="summary-item">
-                        <div>Charlie owes Alice:</div>
-                        <div class="owe-negative">1,875 JPY</div>
-                    </div>
-                    <div class="summary-item">
-                        <div><strong>Your net balance:</strong></div>
-                        <div class="owe-negative"><strong>-4,625 JPY</strong></div>
-                    </div>
-                </div>
-                Would you like to see optimized payment routes to minimize the number of transactions?
-            </div>
-
             <div class="typing-indicator">
                 <div class="typing-dot"></div>
                 <div class="typing-dot"></div>
@@ -717,65 +793,65 @@
         <div class="command-suggestion visible">
             <div class="suggestion-title">Available commands:</div>
             <div class="suggestion-commands">
-                <div class="suggestion-command">/record</div>
-                <div class="suggestion-command">/add_friend</div>
-                <div class="suggestion-command">/group</div>
-                <div class="suggestion-command">/finalize</div>
-                <div class="suggestion-command">/help</div>
+                <div class="suggestion-command"><i class="fas fa-receipt"></i> /record</div>
+                <div class="suggestion-command"><i class="fas fa-user-plus"></i> /add_friend</div>
+                <div class="suggestion-command"><i class="fas fa-users"></i> /group</div>
+                <div class="suggestion-command"><i class="fas fa-calculator"></i> /finalize</div>
+                <div class="suggestion-command"><i class="fas fa-question-circle"></i> /help</div>
             </div>
         </div>
 
         <div class="input-area">
             <input type="text" class="command-input" placeholder="Type a message or command (e.g., /record)">
-            <button class="send-button">→</button>
+            <button class="send-button"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
     <!-- Help Overlay -->
     <div class="help-overlay" id="help-overlay">
         <div class="help-content">
-            <button class="close-button" id="close-help">×</button>
+            <button class="close-button" id="close-help"><i class="fas fa-times"></i></button>
             <div class="help-title">FinDutch Help</div>
-            
+
             <div class="help-section">
-                <div class="help-section-title">Commands</div>
-                
+                <div class="help-section-title"><i class="fas fa-terminal"></i> Commands</div>
+
                 <div class="command-item">
                     <div class="command-syntax">/add_friend [@username]</div>
                     <div class="command-description">Add new friends to your contacts.</div>
                     <div class="command-example">Example: /add_friend @Alice @Bob</div>
                 </div>
-                
+
                 <div class="command-item">
                     <div class="command-syntax">/group [create/delete] [#groupname]</div>
                     <div class="command-description">Create or delete an expense group.</div>
                     <div class="command-example">Example: /group create #BaliVacation</div>
                 </div>
-                
+
                 <div class="command-item">
                     <div class="command-syntax">/record [amount] [description] [@users] [#group] [currency?]</div>
                     <div class="command-description">Record a new expense with details.</div>
                     <div class="command-example">Example: /record 50 USD for dinner with @Bob in #FriendsDinner</div>
                 </div>
-                
+
                 <div class="command-item">
                     <div class="command-syntax">/finalize [#group?]</div>
                     <div class="command-description">Calculate and show the final settlement for a group.</div>
                     <div class="command-example">Example: /finalize #RoommateExpenses</div>
                 </div>
             </div>
-            
+
             <div class="help-section">
-                <div class="help-section-title">Natural Language</div>
+                <div class="help-section-title"><i class="fas fa-comment-alt"></i> Natural Language</div>
                 <p>FinDutch understands natural language inputs:</p>
                 <ul style="margin-left: 1rem; margin-top: 0.5rem;">
                     <li>"I paid 30 euros for lunch with Alice and Bob"</li>
                     <li>"Split 120 dollars for hotel with everyone in #VacationGroup"</li>
                 </ul>
             </div>
-            
+
             <div class="help-section">
-                <div class="help-section-title">Tips</div>
+                <div class="help-section-title"><i class="fas fa-lightbulb"></i> Tips</div>
                 <ul style="margin-left: 1rem;">
                     <li>Use @ to tag friends in expenses</li>
                     <li>Use # to associate expenses with groups</li>
@@ -789,28 +865,28 @@
     <!-- Login Overlay -->
     <div class="login-overlay" id="login-overlay">
         <div class="login-content">
-            <button class="close-button" id="close-login">×</button>
+            <button class="close-button" id="close-login"><i class="fas fa-times"></i></button>
             <div class="login-title">Sign In</div>
-            
+
             <form id="login-form">
                 <div class="form-group">
                     <label class="form-label" for="email">Email</label>
                     <input type="email" id="email" class="form-input" placeholder="your@email.com" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label" for="password">Password</label>
                     <input type="password" id="password" class="form-input" placeholder="••••••••" required>
                 </div>
-                
+
                 <button type="submit" class="auth-button">Sign In</button>
-                
+
                 <div class="social-login">
-                    <div class="social-button">G</div>
-                    <div class="social-button">f</div>
-                    <div class="social-button">in</div>
+                    <div class="social-button"><i class="fab fa-google"></i></div>
+                    <div class="social-button"><i class="fab fa-facebook-f"></i></div>
+                    <div class="social-button"><i class="fab fa-linkedin-in"></i></div>
                 </div>
-                
+
                 <div class="auth-alt">
                     Don't have an account? <a class="auth-link" id="show-signup">Sign Up</a>
                 </div>
@@ -821,33 +897,33 @@
     <!-- Sign Up Overlay -->
     <div class="login-overlay" id="signup-overlay">
         <div class="login-content">
-            <button class="close-button" id="close-signup">×</button>
+            <button class="close-button" id="close-signup"><i class="fas fa-times"></i></button>
             <div class="login-title">Create Account</div>
-            
+
             <form id="signup-form">
                 <div class="form-group">
                     <label class="form-label" for="signup-name">Full Name</label>
                     <input type="text" id="signup-name" class="form-input" placeholder="John Doe" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label" for="signup-email">Email</label>
                     <input type="email" id="signup-email" class="form-input" placeholder="your@email.com" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label" for="signup-password">Password</label>
                     <input type="password" id="signup-password" class="form-input" placeholder="••••••••" required>
                 </div>
-                
+
                 <button type="submit" class="auth-button">Create Account</button>
-                
+
                 <div class="social-login">
-                    <div class="social-button">G</div>
-                    <div class="social-button">f</div>
-                    <div class="social-button">in</div>
+                    <div class="social-button"><i class="fab fa-google"></i></div>
+                    <div class="social-button"><i class="fab fa-facebook-f"></i></div>
+                    <div class="social-button"><i class="fab fa-linkedin-in"></i></div>
                 </div>
-                
+
                 <div class="auth-alt">
                     Already have an account? <a class="auth-link" id="show-login">Sign In</a>
                 </div>
@@ -855,9 +931,10 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
         // Demo interactions
-        document.querySelector('.send-button').addEventListener('click', function() {
+        document.querySelector('.send-button').addEventListener('click', function () {
             const input = document.querySelector('.command-input');
             if (input.value.trim() === '/help') {
                 document.getElementById('help-overlay').style.display = 'flex';
@@ -866,11 +943,11 @@
         });
 
         // Command suggestions
-        document.querySelector('.command-input').addEventListener('focus', function() {
+        document.querySelector('.command-input').addEventListener('focus', function () {
             document.querySelector('.command-suggestion').classList.add('visible');
         });
 
-        document.querySelector('.command-input').addEventListener('blur', function() {
+        document.querySelector('.command-input').addEventListener('blur', function () {
             setTimeout(() => {
                 document.querySelector('.command-suggestion').classList.remove('visible');
             }, 200);
@@ -878,19 +955,42 @@
 
         // Add command when suggestion clicked
         document.querySelectorAll('.suggestion-command').forEach(cmd => {
-            cmd.addEventListener('click', function() {
+            cmd.addEventListener('click', function () {
+                const commandText = this.textContent.trim().split(' ')[1];
                 const input = document.querySelector('.command-input');
-                input.value = this.textContent + ' ';
+                input.value = commandText + ' ';
                 input.focus();
             });
         });
 
         // Help overlay
-        document.getElementById('close-help').addEventListener('click', function() {
+        document.getElementById('close-help').addEventListener('click', function () {
             document.getElementById('help-overlay').style.display = 'none';
         });
 
         // Authentication flows
-        document.getElementById('user-menu').addEventListener('click', function() {
+        document.getElementById('user-menu').addEventListener('click', function () {
             document.getElementById('login-overlay').style.display = 'flex';
         });
+
+        document.getElementById('close-login').addEventListener('click', function () {
+            document.getElementById('login-overlay').style.display = 'none';
+        });
+
+        document.getElementById('close-signup').addEventListener('click', function () {
+            document.getElementById('signup-overlay').style.display = 'none';
+        });
+
+        document.getElementById('show-signup').addEventListener('click', function () {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('signup-overlay').style.display = 'flex';
+        });
+
+        document.getElementById('show-login').addEventListener('click', function () {
+            document.getElementById('signup-overlay').style.display = 'none';
+            document.getElementById('login-overlay').style.display = 'flex';
+        });
+    </script>
+</body>
+
+</html>
